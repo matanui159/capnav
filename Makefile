@@ -10,12 +10,14 @@ endif
 
 ifeq ($(config),debug)
   capnav_config = debug
+  cncli_config = debug
 endif
 ifeq ($(config),release)
   capnav_config = release
+  cncli_config = release
 endif
 
-PROJECTS := capnav
+PROJECTS := capnav cncli
 
 .PHONY: all clean help $(PROJECTS) 
 
@@ -27,8 +29,15 @@ ifneq (,$(capnav_config))
 	@${MAKE} --no-print-directory -C . -f capnav.make config=$(capnav_config)
 endif
 
+cncli:
+ifneq (,$(cncli_config))
+	@echo "==== Building cncli ($(cncli_config)) ===="
+	@${MAKE} --no-print-directory -C . -f cncli.make config=$(cncli_config)
+endif
+
 clean:
 	@${MAKE} --no-print-directory -C . -f capnav.make clean
+	@${MAKE} --no-print-directory -C . -f cncli.make clean
 
 help:
 	@echo "Usage: make [config=name] [target]"
@@ -41,5 +50,6 @@ help:
 	@echo "   all (default)"
 	@echo "   clean"
 	@echo "   capnav"
+	@echo "   cncli"
 	@echo ""
 	@echo "For more information, see http://industriousone.com/premake/quick-start"

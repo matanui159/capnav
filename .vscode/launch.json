@@ -8,7 +8,16 @@
 			"MIMode": "gdb",
 			"miDebuggerPath": "gdb.exe",
 			"program": "${workspaceFolder}/bin/Debug/capnav",
-			"args": [],
+			"cwd": "${workspaceFolder}",
+			"preLaunchTask": "Debug"
+		},
+		{
+			"name": "CLI",
+			"type": "cppdbg",
+			"request": "launch",
+			"MIMode": "gdb",
+			"miDebuggerPath": "gdb.exe",
+			"program": "${workspaceFolder}/cli/bin/Debug/cncli",
 			"cwd": "${workspaceFolder}",
 			"preLaunchTask": "Debug"
 		}

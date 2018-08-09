@@ -12,9 +12,9 @@ endif
 
 ifeq ($(config),debug)
   RESCOMP = windres
-  TARGETDIR = bin/Debug
-  TARGET = $(TARGETDIR)/capnav.exe
-  OBJDIR = bin/Debug/obj
+  TARGETDIR = cli/bin/Debug
+  TARGET = $(TARGETDIR)/cncli.exe
+  OBJDIR = cli/bin/Debug/obj
   DEFINES +=
   INCLUDES +=
   FORCE_INCLUDE +=
@@ -24,7 +24,7 @@ ifeq ($(config),debug)
   ALL_RESFLAGS += $(RESFLAGS) $(DEFINES) $(INCLUDES)
   LIBS += -lkernel32 -luser32
   LDDEPS +=
-  ALL_LDFLAGS += $(LDFLAGS) -mwindows -nostdlib -Wl,-e_entry
+  ALL_LDFLAGS += $(LDFLAGS) -nostdlib -Wl,-e_entry
   LINKCMD = $(CC) -o "$@" $(OBJECTS) $(RESOURCES) $(ALL_LDFLAGS) $(LIBS)
   define PREBUILDCMDS
   endef
@@ -39,9 +39,9 @@ endif
 
 ifeq ($(config),release)
   RESCOMP = windres
-  TARGETDIR = bin/Release
-  TARGET = $(TARGETDIR)/capnav.exe
-  OBJDIR = bin/Release/obj
+  TARGETDIR = cli/bin/Release
+  TARGET = $(TARGETDIR)/cncli.exe
+  OBJDIR = cli/bin/Release/obj
   DEFINES +=
   INCLUDES +=
   FORCE_INCLUDE +=
@@ -51,7 +51,7 @@ ifeq ($(config),release)
   ALL_RESFLAGS += $(RESFLAGS) $(DEFINES) $(INCLUDES)
   LIBS += -lkernel32 -luser32
   LDDEPS +=
-  ALL_LDFLAGS += $(LDFLAGS) -flto -mwindows -s -nostdlib -Wl,-e_entry
+  ALL_LDFLAGS += $(LDFLAGS) -flto -s -nostdlib -Wl,-e_entry
   LINKCMD = $(CC) -o "$@" $(OBJECTS) $(RESOURCES) $(ALL_LDFLAGS) $(LIBS)
   define PREBUILDCMDS
   endef
@@ -59,7 +59,7 @@ ifeq ($(config),release)
   endef
   define POSTBUILDCMDS
 	@echo Running postbuild commands
-	upx --ultra-brute bin/Release/capnav.exe
+	upx --ultra-brute cli/bin/Release/cncli.exe
   endef
 all: prebuild prelink $(TARGET)
 	@:
@@ -68,7 +68,6 @@ endif
 
 OBJECTS := \
 	$(OBJDIR)/main.o \
-	$(OBJDIR)/win32.o \
 
 RESOURCES := \
 
@@ -83,7 +82,7 @@ ifeq (/bin,$(findstring /bin,$(SHELL)))
 endif
 
 $(TARGET): $(GCH) ${CUSTOMFILES} $(OBJECTS) $(LDDEPS) $(RESOURCES)
-	@echo Linking capnav
+	@echo Linking cncli
 ifeq (posix,$(SHELLTYPE))
 	$(SILENT) mkdir -p $(TARGETDIR)
 else
@@ -93,7 +92,7 @@ endif
 	$(POSTBUILDCMDS)
 
 clean:
-	@echo Cleaning capnav
+	@echo Cleaning cncli
 ifeq (posix,$(SHELLTYPE))
 	$(SILENT) rm -f  $(TARGET)
 	$(SILENT) rm -rf $(OBJDIR)
@@ -120,15 +119,7 @@ endif
 	$(SILENT) $(CC) -x c-header $(ALL_CFLAGS) -o "$@" -MF "$(@:%.gch=%.d)" -c "$<"
 endif
 
-$(OBJDIR)/main.o: src/main.c
-	@echo $(notdir $<)
-ifeq (posix,$(SHELLTYPE))
-	$(SILENT) mkdir -p $(OBJDIR)
-else
-	$(SILENT) mkdir $(subst /,\\,$(OBJDIR))
-endif
-	$(SILENT) $(CC) $(ALL_CFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
-$(OBJDIR)/win32.o: src/sys/win32.c
+$(OBJDIR)/main.o: cli/src/main.c
 	@echo $(notdir $<)
 ifeq (posix,$(SHELLTYPE))
 	$(SILENT) mkdir -p $(OBJDIR)

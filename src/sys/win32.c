@@ -79,7 +79,7 @@ void sys_timer_kill() {
 	}
 }
 
-void sys_entry() {
+void entry() {
 	SetWindowsHookEx(WH_KEYBOARD_LL, keyboard_proc, NULL, 0);
 	for (;;) {
 		MSG msg;
