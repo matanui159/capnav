@@ -9,26 +9,26 @@ ifndef verbose
 endif
 
 ifeq ($(config),debug)
-  capscroll_config = debug
+  capnav_config = debug
 endif
 ifeq ($(config),release)
-  capscroll_config = release
+  capnav_config = release
 endif
 
-PROJECTS := capscroll
+PROJECTS := capnav
 
 .PHONY: all clean help $(PROJECTS) 
 
 all: $(PROJECTS)
 
-capscroll:
-ifneq (,$(capscroll_config))
-	@echo "==== Building capscroll ($(capscroll_config)) ===="
-	@${MAKE} --no-print-directory -C . -f capscroll.make config=$(capscroll_config)
+capnav:
+ifneq (,$(capnav_config))
+	@echo "==== Building capnav ($(capnav_config)) ===="
+	@${MAKE} --no-print-directory -C . -f capnav.make config=$(capnav_config)
 endif
 
 clean:
-	@${MAKE} --no-print-directory -C . -f capscroll.make clean
+	@${MAKE} --no-print-directory -C . -f capnav.make clean
 
 help:
 	@echo "Usage: make [config=name] [target]"
@@ -40,6 +40,6 @@ help:
 	@echo "TARGETS:"
 	@echo "   all (default)"
 	@echo "   clean"
-	@echo "   capscroll"
+	@echo "   capnav"
 	@echo ""
 	@echo "For more information, see http://industriousone.com/premake/quick-start"

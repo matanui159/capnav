@@ -13,7 +13,7 @@ endif
 ifeq ($(config),debug)
   RESCOMP = windres
   TARGETDIR = bin/Debug
-  TARGET = $(TARGETDIR)/stupid.exe
+  TARGET = $(TARGETDIR)/capnav.exe
   OBJDIR = bin/Debug/obj
   DEFINES +=
   INCLUDES +=
@@ -24,7 +24,7 @@ ifeq ($(config),debug)
   ALL_RESFLAGS += $(RESFLAGS) $(DEFINES) $(INCLUDES)
   LIBS += -lkernel32 -luser32
   LDDEPS +=
-  ALL_LDFLAGS += $(LDFLAGS) -mwindows -nostdlib -Wl,-e_entry
+  ALL_LDFLAGS += $(LDFLAGS) -mwindows -nostdlib -Wl,-e_sys_entry
   LINKCMD = $(CC) -o "$@" $(OBJECTS) $(RESOURCES) $(ALL_LDFLAGS) $(LIBS)
   define PREBUILDCMDS
   endef
@@ -40,7 +40,7 @@ endif
 ifeq ($(config),release)
   RESCOMP = windres
   TARGETDIR = bin/Release
-  TARGET = $(TARGETDIR)/stupid.exe
+  TARGET = $(TARGETDIR)/capnav.exe
   OBJDIR = bin/Release/obj
   DEFINES +=
   INCLUDES +=
@@ -51,7 +51,7 @@ ifeq ($(config),release)
   ALL_RESFLAGS += $(RESFLAGS) $(DEFINES) $(INCLUDES)
   LIBS += -lkernel32 -luser32
   LDDEPS +=
-  ALL_LDFLAGS += $(LDFLAGS) -flto -mwindows -s -nostdlib -Wl,-e_entry
+  ALL_LDFLAGS += $(LDFLAGS) -flto -mwindows -s -nostdlib -Wl,-e_sys_entry
   LINKCMD = $(CC) -o "$@" $(OBJECTS) $(RESOURCES) $(ALL_LDFLAGS) $(LIBS)
   define PREBUILDCMDS
   endef
@@ -59,7 +59,7 @@ ifeq ($(config),release)
   endef
   define POSTBUILDCMDS
 	@echo Running postbuild commands
-	upx --ultra-brute bin/Release/stupid.exe
+	upx --ultra-brute bin/Release/capnav.exe
   endef
 all: prebuild prelink $(TARGET)
 	@:
@@ -83,7 +83,7 @@ ifeq (/bin,$(findstring /bin,$(SHELL)))
 endif
 
 $(TARGET): $(GCH) ${CUSTOMFILES} $(OBJECTS) $(LDDEPS) $(RESOURCES)
-	@echo Linking stupid
+	@echo Linking capnav
 ifeq (posix,$(SHELLTYPE))
 	$(SILENT) mkdir -p $(TARGETDIR)
 else
@@ -93,7 +93,7 @@ endif
 	$(POSTBUILDCMDS)
 
 clean:
-	@echo Cleaning stupid
+	@echo Cleaning capnav
 ifeq (posix,$(SHELLTYPE))
 	$(SILENT) rm -f  $(TARGET)
 	$(SILENT) rm -rf $(OBJDIR)

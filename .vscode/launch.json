@@ -7,7 +7,7 @@
 			"request": "launch",
 			"MIMode": "gdb",
 			"miDebuggerPath": "gdb.exe",
-			"program": "${workspaceFolder}/bin/Debug/capscroll",
+			"program": "${workspaceFolder}/bin/Debug/capnav",
 			"args": [],
 			"cwd": "${workspaceFolder}",
 			"preLaunchTask": "Debug"

@@ -1,7 +1,7 @@
-workspace "capscroll"
+workspace "capnav"
 	configurations { "Debug", "Release" }
 
-project "capscroll"
+project "capnav"
 	kind "WindowedApp"
 	language "C"
 	cdialect "C99"

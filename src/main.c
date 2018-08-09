@@ -3,7 +3,7 @@
 static _Bool g_repeat[26];
 static char g_timer;
 
-_Bool sys_key(char key, sys_event_t event) {
+_Bool sys_key_event(char key, sys_event_t event) {
 	_Bool repeat = 0;
 	int index = key - 'A';
 	if (event == SYS_EVENT_DOWN) {
@@ -13,20 +13,20 @@ _Bool sys_key(char key, sys_event_t event) {
 		g_repeat[index] = 0;
 	}
 
-	if (sys_caps()) {
+	if (sys_key_caps()) {
 		if (event != SYS_EVENT_UP) {
 			switch (key) {
 				case 'A':
-					sys_move(SYS_DIR_LEFT);
+					sys_key_arrow(SYS_ARROW_LEFT);
 					break;
 				case 'D':
-					sys_move(SYS_DIR_RIGHT);
+					sys_key_arrow(SYS_ARROW_RIGHT);
 					break;
 				case 'W':
-					sys_move(SYS_DIR_UP);
+					sys_key_arrow(SYS_ARROW_UP);
 					break;
 				case 'S':
-					sys_move(SYS_DIR_DOWN);
+					sys_key_arrow(SYS_ARROW_DOWN);
 					break;
 			}
 		}
@@ -34,18 +34,22 @@ _Bool sys_key(char key, sys_event_t event) {
 		if (!repeat && (key == 'Q' || key == 'E')) {
 			if (event == SYS_EVENT_UP) {
 				if (key == g_timer) {
-					sys_tkill();
+					sys_timer_kill();
 				}
 			} else if (key == 'Q') {
-				sys_move(SYS_DIR_UP);
+				sys_key_arrow(SYS_ARROW_UP);
 			} else {
-				sys_move(SYS_DIR_DOWN);
+				sys_key_arrow(SYS_ARROW_DOWN);
 			}
 
 			if (event == SYS_EVENT_DOWN) {
 				g_timer = key;
-				sys_tset(key, 10);
+				sys_timer_set(key, 10);
 			}
+		}
+
+		if (!repeat && (key == 'F' || key == 'R')) {
+			sys_key_action(key);
 		}
 
 		return 1;
