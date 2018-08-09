@@ -5,13 +5,13 @@ project "capscroll"
 	kind "WindowedApp"
 	language "C"
 	cdialect "C99"
-	files "src/*.c"
+	files "src/main.c"
 	objdir "bin/%{cfg.buildcfg}/obj"
 	targetdir "bin/%{cfg.buildcfg}"
 
 	linkoptions {
 		"-nostdlib",
-		"-Wl,-e_entry"
+		"-Wl,-e_sys_entry"
 	}
 
 	filter "system:windows"

@@ -1,29 +1,48 @@
 #include "sys.h"
 #include <windows.h>
 
+static UINT_PTR g_timer;
 static char g_key;
 
 static LRESULT CALLBACK keyboard_proc(int code, WPARAM wpm, LPARAM lpm) {
-	if (GetKeyState(VK_CAPITAL) && code == HC_ACTION && wpm == WM_KEYDOWN) {
-		KBDLLHOOKSTRUCT* info = (KBDLLHOOKSTRUCT*)lpm;
-		if (info->vkCode >= 'A' && info->vkCode <= 'Z') {
-			g_key = info->vkCode;
+	KBDLLHOOKSTRUCT* info = (KBDLLHOOKSTRUCT*)lpm;
+	if (code == HC_ACTION && wpm <= WM_KEYUP && info->vkCode >= 'A' && info->vkCode <= 'Z') {
+		sys_event_t event = SYS_EVENT_DOWN;
+		if (wpm == WM_KEYUP) {
+			event = SYS_EVENT_UP;
+		}
+		if (sys_key(info->vkCode, event)) {
 			return 1;
 		}
 	}
 	return CallNextHookEx(NULL, code, wpm, lpm);
 }
 
-// static void send_change(WORD key, _Bool up) {
-// 	INPUT input = {INPUT_KEYBOARD};
-// 	input.ki.wVk = key;
-// 	if (up) {
-// 		input.ki.dwFlags = KEYEVENTF_KEYUP;
-// 	}
-// 	SendInput(1, &input, sizeof(INPUT));
-// }
+static void CALLBACK timer_proc(HWND wnd, UINT msg, UINT_PTR id, DWORD time) {
+	sys_key(g_key, SYS_EVENT_TIMER);
+}
 
-static void send_press(WORD key) {
+_Bool sys_caps() {
+	return GetKeyState(VK_CAPITAL);
+}
+
+void sys_move(sys_dir_t dir) {
+	WORD key = 0;
+	switch (dir) {
+		case SYS_DIR_LEFT:
+			key = VK_LEFT;
+			break;
+		case SYS_DIR_RIGHT:
+			key = VK_RIGHT;
+			break;
+		case SYS_DIR_UP:
+			key = VK_UP;
+			break;
+		case SYS_DIR_DOWN:
+			key = VK_DOWN;
+			break;
+	}
+
 	INPUT inputs[2];
 	inputs[0].type = INPUT_KEYBOARD;
 	inputs[0].ki.wVk = key;
@@ -36,30 +55,19 @@ static void send_press(WORD key) {
 	SendInput(2, inputs, sizeof(INPUT));
 }
 
-static void CALLBACK timer_proc(HWND wnd, UINT msg, UINT_PTR id, DWORD time) {
-	int x, y;
-	sys_update(g_key, &x, &y);
-	g_key = 0;
+void sys_tset(char key, int timer) {
+	g_key = key;
+	g_timer = SetTimer(NULL, g_timer, timer, timer_proc);
+}
 
-	while (x < 0) {
-		send_press(VK_LEFT);
-		++x;
-	}
-	while (x > 0) {
-		send_press(VK_RIGHT);
-		--x;
-	}
-	while (y < 0) {
-		send_press(VK_UP);
-		--y;
-	}
-	while (y > 0) {
-		send_press(VK_DOWN);
-		++y;
+void sys_tkill() {
+	if (g_timer != 0) {
+		KillTimer(NULL, g_timer);
+		g_timer = 0;
 	}
 }
 
-void entry() {
+void sys_entry() {
 	if (SetWindowsHookEx(WH_KEYBOARD_LL, keyboard_proc, NULL, 0) == NULL) {
 
 		PTSTR error;
@@ -71,7 +79,6 @@ void entry() {
 
 	} else {
 	
-		SetTimer(NULL, 0, SYS_TIMER, timer_proc);
 		for (;;) {
 			MSG msg;
 			GetMessage(&msg, NULL, 0, 0);

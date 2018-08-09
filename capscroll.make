@@ -24,7 +24,7 @@ ifeq ($(config),debug)
   ALL_RESFLAGS += $(RESFLAGS) $(DEFINES) $(INCLUDES)
   LIBS += -lkernel32 -luser32
   LDDEPS +=
-  ALL_LDFLAGS += $(LDFLAGS) -mwindows -nostdlib -Wl,-e_entry
+  ALL_LDFLAGS += $(LDFLAGS) -mwindows -nostdlib -Wl,-e_sys_entry
   LINKCMD = $(CC) -o "$@" $(OBJECTS) $(RESOURCES) $(ALL_LDFLAGS) $(LIBS)
   define PREBUILDCMDS
   endef
@@ -51,7 +51,7 @@ ifeq ($(config),release)
   ALL_RESFLAGS += $(RESFLAGS) $(DEFINES) $(INCLUDES)
   LIBS += -lkernel32 -luser32
   LDDEPS +=
-  ALL_LDFLAGS += $(LDFLAGS) -flto -mwindows -s -nostdlib -Wl,-e_entry
+  ALL_LDFLAGS += $(LDFLAGS) -flto -mwindows -s -nostdlib -Wl,-e_sys_entry
   LINKCMD = $(CC) -o "$@" $(OBJECTS) $(RESOURCES) $(ALL_LDFLAGS) $(LIBS)
   define PREBUILDCMDS
   endef
