@@ -19,7 +19,8 @@
 			"miDebuggerPath": "gdb.exe",
 			"program": "${workspaceFolder}/cli/bin/Debug/cncli",
 			"cwd": "${workspaceFolder}",
-			"preLaunchTask": "Debug"
+			"preLaunchTask": "Debug",
+			"externalConsole": true
 		}
 	]
 }
