@@ -27,14 +27,32 @@ static void send_action(WORD key) {
 }
 
 static char g_key;
+static void CALLBACK timer_proc(HWND wnd, UINT msg, UINT_PTR id, DWORD time) {
+	if (GetKeyState(VK_CAPITAL)) {
+		switch (g_key) {
+			case 'Q':
+				send_press(VK_UP);
+				break;
+			case 'E':
+				send_press(VK_DOWN);
+				break;
+		}
+	}
+}
+
 static LRESULT CALLBACK keyboard_proc(int code, WPARAM wpm, LPARAM lpm) {
 	static UINT_PTR timer;
 
 	char key = ((KBDLLHOOKSTRUCT*)lpm)->vkCode;
 	if (code == HC_ACTION && wpm <= WM_KEYUP && key >= 'A' && key <= 'Z') {
 		if (wpm == WM_KEYDOWN) {
-			g_key = key;
+			if (key != g_key) {
+				g_key = key;
+				timer = SetTimer(NULL, timer, TIMER, timer_proc);
+			}
 		} else if (key == g_key) {
+			KillTimer(NULL, timer);
+			timer = 0;
 			g_key = 0;
 		}
 
@@ -72,21 +90,7 @@ void entry() {
 	DWORD prev = GetTickCount();
 	for (;;) {
 		MSG msg;
-		while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
-			DispatchMessage(&msg);
-		}
-
-		DWORD next = GetTickCount();
-		while (next - prev >= TIMER) {
-			switch (g_key) {
-				case 'Q':
-					send_press(VK_UP);
-					break;
-				case 'E':
-					send_press(VK_DOWN);
-					break;
-			}
-			prev += TIMER;
-		}
+		GetMessage(&msg, NULL, 0, 0);
+		DispatchMessage(&msg);
 	}
 }
