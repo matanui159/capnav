@@ -4,11 +4,6 @@ local function custom_project(name, type, path)
 		files (path .. "src/**.c")
 		objdir (path .. "bin/%{cfg.buildcfg}/obj")
 		targetdir (path .. "bin/%{cfg.buildcfg}")
-
-		filter "Release"
-			postbuildcommands {
-				"upx --ultra-brute " .. path .. "bin/%{cfg.buildcfg}/%{prj.name}.exe"
-			}
 end
 
 workspace "capnav"
@@ -32,6 +27,10 @@ workspace "capnav"
 	filter "Release"
 		optimize "Size"
 		flags "LinkTimeOptimization"
+		postbuildcommands {
+			"upx --ultra-brute bin/%{cfg.buildcfg}/capnav.exe",
+			"upx --ultra-brute cli/bin/%{cfg.buildcfg}/cncli.exe"
+		}
 
 custom_project("capnav", "WindowedApp", "")
 custom_project("cncli", "ConsoleApp", "cli/")

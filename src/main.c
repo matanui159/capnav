@@ -1,59 +1,92 @@
-#include "sys/sys.h"
+#include <windows.h>
 
-static _Bool g_repeat[26];
-static char g_timer;
+#define TIMER 10
 
-_Bool sys_key_event(char key, sys_event_t event) {
-	_Bool repeat = 0;
-	int index = key - 'A';
-	if (event == SYS_EVENT_DOWN) {
-		repeat = g_repeat[index];
-		g_repeat[index] = 1;
-	} else if (event == SYS_EVENT_UP) {
-		g_repeat[index] = 0;
+static void send_input(WORD key, _Bool up) {
+	INPUT input = {INPUT_KEYBOARD};
+	input.type = INPUT_KEYBOARD;
+	input.ki.wVk = key;
+	if (up) {
+		input.ki.dwFlags = KEYEVENTF_KEYUP;
 	}
+	SendInput(1, &input, sizeof(INPUT));
+}
 
-	if (sys_key_caps()) {
-		if (event != SYS_EVENT_UP) {
-			switch (key) {
-				case 'A':
-					sys_key_arrow(SYS_ARROW_LEFT);
-					break;
-				case 'D':
-					sys_key_arrow(SYS_ARROW_RIGHT);
-					break;
-				case 'W':
-					sys_key_arrow(SYS_ARROW_UP);
-					break;
-				case 'S':
-					sys_key_arrow(SYS_ARROW_DOWN);
-					break;
-			}
+static void send_press(WORD key) {
+	send_input(key, 0);
+	send_input(key, 1);
+}
+
+static void send_action(WORD key) {
+	send_press(VK_CAPITAL);
+	send_input(VK_LCONTROL, 0);
+	send_input(VK_LMENU, 0);
+	send_press(key);
+	send_input(VK_LMENU, 1);
+	send_input(VK_LCONTROL, 1);
+}
+
+static char g_key;
+static LRESULT CALLBACK keyboard_proc(int code, WPARAM wpm, LPARAM lpm) {
+	static UINT_PTR timer;
+
+	char key = ((KBDLLHOOKSTRUCT*)lpm)->vkCode;
+	if (code == HC_ACTION && wpm <= WM_KEYUP && key >= 'A' && key <= 'Z') {
+		if (wpm == WM_KEYDOWN) {
+			g_key = key;
+		} else if (key == g_key) {
+			g_key = 0;
 		}
 
-		if (!repeat && (key == 'Q' || key == 'E')) {
-			if (event == SYS_EVENT_UP) {
-				if (key == g_timer) {
-					sys_timer_kill();
+		if (GetKeyState(VK_CAPITAL)) {
+			if (wpm == WM_KEYDOWN) {
+				switch (key) {
+					case 'A':
+						send_press(VK_LEFT);
+						break;
+					case 'D':
+						send_press(VK_RIGHT);
+						break;
+					case 'W':
+					case 'Q':
+						send_press(VK_UP);
+						break;
+					case 'S':
+					case 'E':
+						send_press(VK_DOWN);
+						break;
+					case 'F':
+					case 'R':
+						send_action(key);
+						break;
 				}
-			} else if (key == 'Q') {
-				sys_key_arrow(SYS_ARROW_UP);
-			} else {
-				sys_key_arrow(SYS_ARROW_DOWN);
 			}
+			return 1;
+		}
+	}
+	return CallNextHookEx(NULL, code, wpm, lpm);
+}
 
-			if (event == SYS_EVENT_DOWN) {
-				g_timer = key;
-				sys_timer_set(key, 10);
-			}
+void entry() {
+	SetWindowsHookEx(WH_KEYBOARD_LL, keyboard_proc, NULL, 0);
+	DWORD prev = GetTickCount();
+	for (;;) {
+		MSG msg;
+		while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
+			DispatchMessage(&msg);
 		}
 
-		if (!repeat && (key == 'F' || key == 'R')) {
-			sys_key_action(key);
+		DWORD next = GetTickCount();
+		while (next - prev >= TIMER) {
+			switch (g_key) {
+				case 'Q':
+					send_press(VK_UP);
+					break;
+				case 'E':
+					send_press(VK_DOWN);
+					break;
+			}
+			prev += TIMER;
 		}
-
-		return 1;
-	} else {
-		return 0;
 	}
 }

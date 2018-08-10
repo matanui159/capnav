@@ -60,6 +60,7 @@ ifeq ($(config),release)
   define POSTBUILDCMDS
 	@echo Running postbuild commands
 	upx --ultra-brute bin/Release/capnav.exe
+	upx --ultra-brute cli/bin/Release/cncli.exe
   endef
 all: prebuild prelink $(TARGET)
 	@:
@@ -68,7 +69,6 @@ endif
 
 OBJECTS := \
 	$(OBJDIR)/main.o \
-	$(OBJDIR)/win32.o \
 
 RESOURCES := \
 
@@ -121,14 +121,6 @@ endif
 endif
 
 $(OBJDIR)/main.o: src/main.c
-	@echo $(notdir $<)
-ifeq (posix,$(SHELLTYPE))
-	$(SILENT) mkdir -p $(OBJDIR)
-else
-	$(SILENT) mkdir $(subst /,\\,$(OBJDIR))
-endif
-	$(SILENT) $(CC) $(ALL_CFLAGS) $(FORCE_INCLUDE) -o "$@" -MF "$(@:%.o=%.d)" -c "$<"
-$(OBJDIR)/win32.o: src/sys/win32.c
 	@echo $(notdir $<)
 ifeq (posix,$(SHELLTYPE))
 	$(SILENT) mkdir -p $(OBJDIR)
