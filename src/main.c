@@ -2,12 +2,16 @@
 
 #define TIMER 10
 
+#define KEY_DOWN(key) (GetKeyState(key) & 0x8000)
+#define KEY_TOGGLED(key) (GetKeyState(key) & 0x0001)
+#define KEY_INTERCEPT() (KEY_TOGGLED(VK_CAPITAL) && !KEY_DOWN(VK_CONTROL) && !KEY_DOWN(VK_MENU))
+
 static void send_input(WORD key, _Bool up) {
 	INPUT input = {INPUT_KEYBOARD};
-	input.type = INPUT_KEYBOARD;
-	input.ki.wVk = key;
+	input.ki.wScan = MapVirtualKey(key, MAPVK_VK_TO_VSC);
+	input.ki.dwFlags = KEYEVENTF_SCANCODE;
 	if (up) {
-		input.ki.dwFlags = KEYEVENTF_KEYUP;
+		input.ki.dwFlags |= KEYEVENTF_KEYUP;
 	}
 	SendInput(1, &input, sizeof(INPUT));
 }
@@ -17,19 +21,10 @@ static void send_press(WORD key) {
 	send_input(key, 1);
 }
 
-static void send_action(WORD key) {
-	send_press(VK_CAPITAL);
-	send_input(VK_LCONTROL, 0);
-	send_input(VK_LMENU, 0);
-	send_press(key);
-	send_input(VK_LMENU, 1);
-	send_input(VK_LCONTROL, 1);
-}
-
-static char g_key;
+static DWORD g_repeat;
 static void CALLBACK timer_proc(HWND wnd, UINT msg, UINT_PTR id, DWORD time) {
-	if (GetKeyState(VK_CAPITAL)) {
-		switch (g_key) {
+	if (KEY_INTERCEPT()) {
+		switch (g_repeat) {
 			case 'Q':
 				send_press(VK_UP);
 				break;
@@ -42,21 +37,37 @@ static void CALLBACK timer_proc(HWND wnd, UINT msg, UINT_PTR id, DWORD time) {
 
 static LRESULT CALLBACK keyboard_proc(int code, WPARAM wpm, LPARAM lpm) {
 	static UINT_PTR timer;
-
-	char key = ((KBDLLHOOKSTRUCT*)lpm)->vkCode;
-	if (code == HC_ACTION && wpm <= WM_KEYUP && key >= 'A' && key <= 'Z') {
-		if (wpm == WM_KEYDOWN) {
-			if (key != g_key) {
-				g_key = key;
-				timer = SetTimer(NULL, timer, TIMER, timer_proc);
+	static _Bool numlock;
+	DWORD key = ((KBDLLHOOKSTRUCT*)lpm)->vkCode;
+	if (code == HC_ACTION && (wpm == WM_KEYDOWN || wpm == WM_KEYUP)) {
+		if (key == VK_CAPITAL && wpm == WM_KEYDOWN) {
+			if (KEY_TOGGLED(VK_CAPITAL)) {
+				if (numlock && !KEY_TOGGLED(VK_NUMLOCK)) {
+					send_press(VK_NUMLOCK);
+				}
+			} else {
+				numlock = KEY_TOGGLED(VK_NUMLOCK);
+				if (numlock) {
+					send_press(VK_NUMLOCK);
+				}
 			}
-		} else if (key == g_key) {
-			KillTimer(NULL, timer);
-			timer = 0;
-			g_key = 0;
 		}
 
-		if (GetKeyState(VK_CAPITAL)) {
+		if (key == 'Q' || key == 'E') {
+			if (wpm == WM_KEYDOWN) {
+				if (key != g_repeat) {
+					g_repeat = key;
+					timer_proc(NULL, 0, 0, 0);
+					timer = SetTimer(NULL, timer, TIMER, timer_proc);
+				}
+			} else if (key == g_repeat) {
+				KillTimer(NULL, timer);
+				timer = 0;
+				g_repeat = 0;
+			}
+		}
+
+		if (key >= 'A' && key <= 'Z' && KEY_INTERCEPT()) {
 			if (wpm == WM_KEYDOWN) {
 				switch (key) {
 					case 'A':
@@ -66,16 +77,19 @@ static LRESULT CALLBACK keyboard_proc(int code, WPARAM wpm, LPARAM lpm) {
 						send_press(VK_RIGHT);
 						break;
 					case 'W':
-					case 'Q':
 						send_press(VK_UP);
 						break;
 					case 'S':
-					case 'E':
 						send_press(VK_DOWN);
 						break;
 					case 'F':
 					case 'R':
-						send_action(key);
+						send_press(VK_CAPITAL);
+						send_input(VK_CONTROL, 0);
+						send_input(VK_MENU, 0);
+						send_press(key);
+						send_input(VK_MENU, 1);
+						send_input(VK_CONTROL, 1);
 						break;
 				}
 			}
@@ -87,7 +101,6 @@ static LRESULT CALLBACK keyboard_proc(int code, WPARAM wpm, LPARAM lpm) {
 
 void entry() {
 	SetWindowsHookEx(WH_KEYBOARD_LL, keyboard_proc, NULL, 0);
-	DWORD prev = GetTickCount();
 	for (;;) {
 		MSG msg;
 		GetMessage(&msg, NULL, 0, 0);

@@ -11,14 +11,19 @@ workspace "capnav"
 	language "C"
 	cdialect "C99"
 
-	links {
-		"kernel32",
-		"user32"
+	buildoptions {
+		"-Wall",
+		"-mno-stack-arg-probe"
 	}
 
 	linkoptions {
 		"-nostdlib",
-		"-Wl,-e_entry"
+		"-Wl,-e_entry",
+	}
+
+	links {
+		"kernel32",
+		"user32"
 	}
 
 	filter "Debug"
