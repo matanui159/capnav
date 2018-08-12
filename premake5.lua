@@ -10,8 +10,7 @@ project "capnav"
 	cdialect "C99"
 
 	buildoptions {
-		"-Wall",
-		"-mno-stack-arg-probe"
+		"-Wall"
 	}
 
 	linkoptions {

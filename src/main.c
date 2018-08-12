@@ -6,19 +6,17 @@
 #define KEY_TOGGLED(key) (GetKeyState(key) & 0x0001)
 #define KEY_INTERCEPT() (KEY_TOGGLED(VK_CAPITAL) && !KEY_DOWN(VK_CONTROL) && !KEY_DOWN(VK_MENU))
 
-static void send_input(WORD key, _Bool up) {
-	INPUT input = {INPUT_KEYBOARD};
-	input.ki.wScan = MapVirtualKey(key, MAPVK_VK_TO_VSC);
-	input.ki.dwFlags = KEYEVENTF_SCANCODE;
-	if (up) {
-		input.ki.dwFlags |= KEYEVENTF_KEYUP;
-	}
-	SendInput(1, &input, sizeof(INPUT));
-}
-
 static void send_press(WORD key) {
-	send_input(key, 0);
-	send_input(key, 1);
+	INPUT inputs[2];
+	inputs[0].type = INPUT_KEYBOARD;
+	inputs[0].ki.wScan = MapVirtualKey(key, MAPVK_VK_TO_VSC);
+	inputs[0].ki.dwFlags = KEYEVENTF_SCANCODE;
+	inputs[0].ki.time = 0;
+	inputs[0].ki.dwExtraInfo = 0;
+
+	inputs[1] = inputs[0];
+	inputs[1].ki.dwFlags |= KEYEVENTF_KEYUP;
+	SendInput(2, inputs, sizeof(INPUT));
 }
 
 static DWORD g_repeat;
@@ -81,15 +79,6 @@ static LRESULT CALLBACK keyboard_proc(int code, WPARAM wpm, LPARAM lpm) {
 						break;
 					case 'S':
 						send_press(VK_DOWN);
-						break;
-					case 'F':
-					case 'R':
-						send_press(VK_CAPITAL);
-						send_input(VK_CONTROL, 0);
-						send_input(VK_MENU, 0);
-						send_press(key);
-						send_input(VK_MENU, 1);
-						send_input(VK_CONTROL, 1);
 						break;
 				}
 			}
