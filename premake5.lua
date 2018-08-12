@@ -1,13 +1,11 @@
-local function custom_project(name, type, path)
-	project (name)
-		kind (type)
-		files (path .. "src/**.c")
-		objdir (path .. "bin/%{cfg.buildcfg}/obj")
-		targetdir (path .. "bin/%{cfg.buildcfg}")
-end
-
 workspace "capnav"
 	configurations {"Debug", "Release"}
+
+project "capnav"
+	kind "WindowedApp"
+	files "src/**.c"
+	objdir "bin/%{cfg.buildcfg}/obj"
+	targetdir "bin/%{cfg.buildcfg}"
 	language "C"
 	cdialect "C99"
 
@@ -33,9 +31,5 @@ workspace "capnav"
 		optimize "Size"
 		flags "LinkTimeOptimization"
 		postbuildcommands {
-			"upx --ultra-brute bin/%{cfg.buildcfg}/capnav.exe",
-			"upx --ultra-brute cli/bin/%{cfg.buildcfg}/cncli.exe"
+			"upx --ultra-brute bin/%{cfg.buildcfg}/capnav.exe"
 		}
-
-custom_project("capnav", "WindowedApp", "")
-custom_project("cncli", "ConsoleApp", "cli/")

@@ -60,7 +60,6 @@ ifeq ($(config),release)
   define POSTBUILDCMDS
 	@echo Running postbuild commands
 	upx --ultra-brute bin/Release/capnav.exe
-	upx --ultra-brute cli/bin/Release/cncli.exe
   endef
 all: prebuild prelink $(TARGET)
 	@:
